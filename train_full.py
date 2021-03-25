@@ -38,7 +38,7 @@ def train_full(net, train_loader, optimizer, device, epoch):
 			print("Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(epoch, batch_idx * len(x), len(train_loader.dataset),
 				100. * batch_idx / len(train_loader), loss.item()))
 
-	print("===> Train Epoch Accuracy : {:.0f}%".format(100. * correct_pred / len(train_loader.dataset)))
+	print("===> Train Epoch Accuracy : {:.2f}%".format(100. * correct_pred / len(train_loader.dataset)))
 
 def test_full(net, test_loader, device):
 	net.eval()
@@ -52,14 +52,17 @@ def test_full(net, test_loader, device):
 			pred = y.argmax(dim=1)
 			correct_pred += (pred == label).sum().item()
 
-	print("===> Test Accuracy : {:.0f}%, Test Average loss: {:.4f}".format(100. * correct_pred / len(test_loader.dataset), 
+	print("===> Test Accuracy : {:.2f}%, Test Average loss: {:.4f}".format(100. * correct_pred / len(test_loader.dataset), 
 		test_loss / len(test_loader.dataset)))
 
 if __name__ == '__main__':
 
 	torch.manual_seed(seed)
 	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-	print("Training on {} !".format(torch.cuda.get_device_name()))
+	if device.type == "cuda":
+		print("Training on {} !".format(torch.cuda.get_device_name()))
+	else:
+		print("Training on CPU :( ")
 
 	transform=transforms.Compose([
 		transforms.ToTensor(),

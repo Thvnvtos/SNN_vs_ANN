@@ -21,7 +21,7 @@ class ANN(nn.Module):
         self.fc = nn.Sequential(
             nn.Flatten(),
             nn.Linear(fm[1]*self.dim2**2, 10),
-            nn.Softmax()
+            nn.Softmax(dim=1)
             )
 
     def forward(self, x):
