@@ -2,3 +2,5 @@
 _pycache_
 data
 tests.ipynb
+logs
+__pycache__/models.cpython-38.pyc
