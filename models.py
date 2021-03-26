@@ -8,18 +8,21 @@ class ANN(nn.Module):
         
         self.convLayer1 = nn.Sequential(
             nn.Conv2d(in_c, fm[0], kernel_size=ks[0]),
+            nn.BatchNorm2d(fm[0]),
             nn.ReLU(),
             nn.MaxPool2d(2,2)
             )
         self.dim1 = (28 - ks[0] + 1) // 2
         self.convLayer2 = nn.Sequential(
             nn.Conv2d(fm[0],fm[1], kernel_size=ks[1]),
+            nn.BatchNorm2d(fm[1]),
             nn.ReLU(),
             nn.MaxPool2d(2,2)
             )
         self.dim2 = (self.dim1 - ks[1] + 1) // 2
         self.fc = nn.Sequential(
             nn.Flatten(),
+            # check using dropout
             nn.Linear(fm[1]*self.dim2**2, 10),
             nn.Softmax(dim=1)
             )

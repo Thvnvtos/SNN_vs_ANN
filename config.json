@@ -1,0 +1,16 @@
+{
+	"train_ann" : true,
+	"train_snn" : true,
+
+	"data_root" : "data",
+	"seed" : 11,
+
+	"batch_size" : 64,
+
+	"ann" :
+	{
+		"epochs" : 150,
+		"lr" : 1e-2
+	}
+
+}

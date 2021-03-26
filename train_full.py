@@ -1,4 +1,4 @@
-import torch
+import torch, json
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -6,15 +6,16 @@ from torchvision import datasets, transforms
 
 import models
 
+config_file_path = "config.json"
 
-epochs = 100
-batch_size = 64
-lr = 1e-2
-log_interval = 14000 // batch_size # in order to have 5 logs in each epoch depending on the batch_size
+with open(config_file_path) as f:
+		config = json.load(f)
 
-data_root = "data"
-seed = 11
+data_root = config["data_root"]
+seed = config["seed"]
+batch_size = config["batch_size"]
 
+log_interval = 60000//(4*batch_size) # in order to have 5 logs in each epoch depending on the batch_size
 mnist_mean = 0.1307
 mnist_std = 0.3081
 
@@ -75,11 +76,16 @@ if __name__ == '__main__':
 	train_loader = torch.utils.data.DataLoader(dataset_train, batch_size, shuffle=True)
 	test_loader = torch.utils.data.DataLoader(dataset_test, batch_size)
 
-	net = models.ANN().to(device)
 
-	optimizer = optim.SGD(net.parameters(), lr = lr)
+	if config["train_ann"]:
+		config_ann = config["ann"]
 
-	for epoch in range(epochs):
-		train_full(net, train_loader, optimizer, device, epoch+1)
-		test_full(net, test_loader, device)
-		print("------------------------------------------------------")
+		net = models.ANN().to(device)
+		optimizer = optim.SGD(net.parameters(), lr = config_ann["lr"])
+
+		epochs = config_ann["epochs"]
+		print("########## Training ANN for {} Epochs ##########\n".format(epochs))
+		for epoch in range(epochs):
+			train_full(net, train_loader, optimizer, device, epoch+1)
+			test_full(net, test_loader, device)
+			print("------------------------------------------------------")
