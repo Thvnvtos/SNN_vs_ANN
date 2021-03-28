@@ -130,11 +130,11 @@ if __name__ == '__main__':
 
 
 		for param in ann.convLayer1.parameters():
-    		param.requires_grad = False
-    	for param in ann.convLayer2.parameters():
-    		param.requires_grad = False
+			param.requires_grad = False
+		for param in ann.convLayer2.parameters():
+			param.requires_grad = False
 
-    	optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = config_ann["lr"])
+		optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = config_ann["lr"])
 
 		for epoch in range(epochs):
 			
@@ -174,11 +174,11 @@ if __name__ == '__main__':
 			snn_logs["test_acc_1"].append(test_acc)
 
 		for param in snn.static_conv.parameters():
-    		param.requires_grad = False
-    	for param in snn.conv.parameters():
-    		param.requires_grad = False
+			param.requires_grad = False
+		for param in snn.conv.parameters():
+			param.requires_grad = False
 
-    	optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = config_snn["lr"])
+		optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = config_snn["lr"])
 
 		for epoch in range(epochs):
 			
