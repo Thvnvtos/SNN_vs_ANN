@@ -9,10 +9,15 @@ import models
 
 config_file_path = "config.json"
 logs_path = os.path.join("logs","train_full")
+save_path = os.path.join("saved_models","train_full")
 
 if not os.path.exists(logs_path):
     os.mkdir("logs")
     os.mkdir(logs_path)
+
+if not os.path.exists(save_path):
+    os.mkdir("saved_models")
+    os.mkdir(save_path)
 
 with open(config_file_path) as f:
     config = json.load(f)
@@ -104,9 +109,10 @@ if __name__ == '__main__':
         config_ann = config["ann"]
 
         net = models.ANN().to(device)
-        optimizer = optim.SGD(net.parameters(), lr = config_ann["lr"])
+        optimizer = optim.Adam(net.parameters(), lr = config_ann["lr"])
 
         epochs = config_ann["epochs"]
+        best_acc = 0
         print("########## Training ANN for {} Epochs ##########\n".format(epochs))
         ann_logs = {"train_loss":[], "train_acc":[], "test_loss":[], "test_acc":[]}
         for epoch in range(epochs):
@@ -118,7 +124,12 @@ if __name__ == '__main__':
             ann_logs["train_loss"].append(train_loss)
             ann_logs["train_acc"].append(train_acc)
             ann_logs["test_loss"].append(test_loss)
-            ann_logs["test_loss"].append(test_loss)
+            ann_logs["test_acc"].append(test_acc)
+
+            if test_acc > best_acc:
+                best_acc = test_acc
+                torch.save(net.state_dict(), os.path.join(save_path, "ann.pth")) 
+
         with open(os.path.join(logs_path,"ann_logs.pickle"), "wb") as file:
             pickle.dump(ann_logs, file)
     
@@ -127,9 +138,10 @@ if __name__ == '__main__':
         config_snn = config["snn"]
 
         net = models.SNN().to(device)
-        optimizer = optim.SGD(net.parameters(), lr = config_snn["lr"])
+        optimizer = optim.Adam(net.parameters(), lr = config_snn["lr"])
 
         epochs = config_snn["epochs"]
+        best_acc = 0
         print("########## Training SNN for {} Epochs ##########\n".format(epochs))
         snn_logs = {"train_loss":[], "train_acc":[], "test_loss":[], "test_acc":[]}
         for epoch in range(epochs):
@@ -141,6 +153,11 @@ if __name__ == '__main__':
             snn_logs["train_loss"].append(train_loss)
             snn_logs["train_acc"].append(train_acc)
             snn_logs["test_loss"].append(test_loss)
-            snn_logs["test_loss"].append(test_loss)
+            snn_logs["test_acc"].append(test_acc)
+
+            if test_acc > best_acc:
+                best_acc = test_acc
+                torch.save(net.state_dict(), os.path.join(save_path, "snn.pth")) 
+
         with open(os.path.join(logs_path,"snn_logs.pickle"), "wb") as file:
             pickle.dump(snn_logs, file)
