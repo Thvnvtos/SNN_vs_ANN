@@ -9,13 +9,13 @@
 
 	"ann" :
 	{
-		"epochs" : 150,
+		"epochs" : 75,
 		"lr" : 1e-3
 	},
 
 	"snn" :
 	{
-		"epochs" : 150,
+		"epochs" : 75,
 		"lr" : 1e-3
 	}
 
