@@ -24,6 +24,7 @@ class ANN(nn.Module):
         self.fc = nn.Sequential(
             nn.Flatten(),
             # check using dropout
+            nn.Dropout(0.5),
             nn.Linear(fm[1]*self.dim2**2, 10, bias=False),
             nn.Softmax(dim=1)
             )
@@ -59,6 +60,7 @@ class SNN(nn.Module):
         self.fc = nn.Sequential(
             nn.Flatten(),
             # check using dropout
+            layer.Dropout(0.5),
             nn.Linear(fm[1]*self.dim2**2, 10, bias=False),
             neuron.LIFNode(tau=tau, v_threshold=v_threshold, v_reset=v_reset, surrogate_function=surrogate.ATan()),
             )

@@ -139,6 +139,7 @@ if __name__ == '__main__':
 
 		optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = 2e-5)
 		print("\n===================================================\n")
+		best_acc = 0
 		for epoch in range(epochs):
 			
 			_, train_acc = train_seq(net, train_loader_2, optimizer, device, epoch+1)
@@ -150,6 +151,10 @@ if __name__ == '__main__':
 			ann_logs["test_acc_2"].append(test_acc_2)
 			ann_logs["test_acc_1"].append(test_acc_1)
 			ann_logs["test_acc_1+2"].append((test_acc_1 + test_acc_1) / 2)
+
+			if test_acc_2 + test_acc_1 + train_acc > best_acc:
+				best_acc = test_acc_2 + test_acc_1 + train_acc
+				torch.save(net.state_dict(), os.path.join(save_path, "ann.pth"))
 
 		with open(os.path.join(logs_path,"ann_logs.pickle"), "wb") as file:
 			pickle.dump(ann_logs, file)
@@ -183,6 +188,7 @@ if __name__ == '__main__':
 
 		optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = 2e-5)
 		print("\n========================================================\n")
+		best_acc = 0
 		for epoch in range(epochs):
 			
 			_, train_acc = train_seq(net, train_loader_2, optimizer, device, epoch+1)
@@ -194,6 +200,10 @@ if __name__ == '__main__':
 			snn_logs["test_acc_2"].append(test_acc_2)
 			snn_logs["test_acc_1"].append(test_acc_1)
 			snn_logs["test_acc_1+2"].append((test_acc_1 + test_acc_1) / 2)
+
+			if test_acc_2 + test_acc_1 + train_acc > best_acc:
+				best_acc = test_acc_2 + test_acc_1 + train_acc
+				torch.save(net.state_dict(), os.path.join(save_path, "snn.pth"))
 
 		with open(os.path.join(logs_path,"snn_logs.pickle"), "wb") as file:
 			pickle.dump(snn_logs, file)
