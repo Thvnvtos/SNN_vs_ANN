@@ -41,12 +41,12 @@ def train_seq(net, train_loader, optimizer, device, epoch):
 		x, label = x.to(device), label.to(device)
 		optimizer.zero_grad()
 		y = net(x)
-		#label = F.one_hot(label, 10).float()
-		#loss = F.mse_loss(y, label)
-		#correct_pred += (y.argmax(dim=1) == label.argmax(dim=1)).sum().item()
-		loss = F.cross_entropy(y,label)
-		pred = y.argmax(dim=1)
-		correct_pred += (pred == label).sum().item()
+		label = F.one_hot(label, 10).float()
+		loss = F.mse_loss(y, label)
+		correct_pred += (y.argmax(dim=1) == label.argmax(dim=1)).sum().item()
+		#loss = F.cross_entropy(y,label)
+		#pred = y.argmax(dim=1)
+		#correct_pred += (pred == label).sum().item()
 		loss.backward()
 		optimizer.step()
 		train_loss += loss.item()
@@ -71,9 +71,12 @@ def test_seq(net, test_loader, device):
 		for x, label in test_loader:
 			x, label = x.to(device), label.to(device)
 			y = net(x)
-			test_loss += F.cross_entropy(y, label).item()
-			pred = y.argmax(dim=1)
-			correct_pred += (pred == label).sum().item()
+			label = F.one_hot(label, 10).float()
+			test_loss += F.mse_loss(y, label)
+			correct_pred += (y.argmax(dim=1) == label.argmax(dim=1)).sum().item()
+			#test_loss += F.cross_entropy(y, label).item()
+			#pred = y.argmax(dim=1)
+			#correct_pred += (pred == label).sum().item()
 
 			if config["train_snn"]:
 				functional.reset_net(net)
@@ -129,13 +132,13 @@ if __name__ == '__main__':
 			ann_logs["test_acc_1"].append(test_acc)
 
 
-		for param in ann.convLayer1.parameters():
+		for param in net.convLayer1.parameters():
 			param.requires_grad = False
-		for param in ann.convLayer2.parameters():
-			param.requires_grad = False
+		for param in net.convLayer2.parameters():
+	  		param.requires_grad = False
 
-		optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = config_ann["lr"])
-
+		optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = 2e-5)
+		print("\n===================================================\n")
 		for epoch in range(epochs):
 			
 			_, train_acc = train_seq(net, train_loader_2, optimizer, device, epoch+1)
@@ -173,13 +176,13 @@ if __name__ == '__main__':
 			snn_logs["train_acc_1"].append(train_acc)
 			snn_logs["test_acc_1"].append(test_acc)
 
-		for param in snn.static_conv.parameters():
+		for param in net.static_conv.parameters():
 			param.requires_grad = False
-		for param in snn.conv.parameters():
+		for param in net.conv.parameters():
 			param.requires_grad = False
 
-		optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = config_snn["lr"])
-
+		optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = 2e-5)
+		print("\n========================================================\n")
 		for epoch in range(epochs):
 			
 			_, train_acc = train_seq(net, train_loader_2, optimizer, device, epoch+1)
