@@ -34,6 +34,11 @@ mnist_std = 0.3081
 torch.manual_seed(seed)
 random.seed(seed)
 np.random.seed(seed)
+torch.cuda.manual_seed(0)
+torch.cuda.manual_seed_all(0)
+torch.backends.cudnn.enabled = False
+torch.backends.cudnn.benchmark = False
+torch.backends.cudnn.deterministic = True
 
 
 def train_seq(net, mode, train_loader, optimizer, device, epoch):
@@ -108,11 +113,11 @@ if __name__ == '__main__':
 	dataset_train_2 = dataset.dataset_prepare([5,6,7,8,9], data_root, train=True)
 	dataset_test_2 = dataset.dataset_prepare([5,6,7,8,9], data_root, train=False)
 
-	train_loader_1 = torch.utils.data.DataLoader(dataset_train_1, batch_size, shuffle=True)
-	test_loader_1 = torch.utils.data.DataLoader(dataset_test_1, batch_size)
+	train_loader_1 = torch.utils.data.DataLoader(dataset_train_1, batch_size, shuffle=True, worker_init_fn=np.random.seed(0),num_workers=0)
+	test_loader_1 = torch.utils.data.DataLoader(dataset_test_1, batch_size, worker_init_fn=np.random.seed(0),num_workers=0)
 
-	train_loader_2 = torch.utils.data.DataLoader(dataset_train_2, batch_size, shuffle=True)
-	test_loader_2 = torch.utils.data.DataLoader(dataset_test_2, batch_size)
+	train_loader_2 = torch.utils.data.DataLoader(dataset_train_2, batch_size, shuffle=True, worker_init_fn=np.random.seed(0),num_workers=0)
+	test_loader_2 = torch.utils.data.DataLoader(dataset_test_2, batch_size, worker_init_fn=np.random.seed(0),num_workers=0)
 
 
 	if config["train_ann"]:

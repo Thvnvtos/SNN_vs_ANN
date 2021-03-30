@@ -34,6 +34,11 @@ mnist_std = 0.3081
 torch.manual_seed(seed)
 random.seed(seed)
 np.random.seed(seed)
+torch.cuda.manual_seed(0)
+torch.cuda.manual_seed_all(0)
+torch.backends.cudnn.enabled = False
+torch.backends.cudnn.benchmark = False
+torch.backends.cudnn.deterministic = True
 
 
 def train(net, mode, train_loader, optimizer, device, epoch):
@@ -103,8 +108,8 @@ if __name__ == '__main__':
 	dataset_train = dataset.dataset_prepare([0,1,2,3,4,5,6], data_root, train=True)
 	dataset_test = dataset.dataset_prepare([0,1,2,3,4,5,6], data_root, train=False)
 
-	train_loader = torch.utils.data.DataLoader(dataset_train, batch_size, shuffle=True)
-	test_loader = torch.utils.data.DataLoader(dataset_test, batch_size)
+	train_loader = torch.utils.data.DataLoader(dataset_train, batch_size, shuffle=True, worker_init_fn=np.random.seed(0),num_workers=0)
+	test_loader = torch.utils.data.DataLoader(dataset_test, batch_size, worker_init_fn=np.random.seed(0),num_workers=0)
 
 
 	if config["train_ann"]:
@@ -142,8 +147,8 @@ if __name__ == '__main__':
 
 			dataset_train_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=True)
 			dataset_test_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=False)
-			train_loader_fewshot = torch.utils.data.DataLoader(dataset_train_fewshot, 1, shuffle=True)
-			test_loader_fewshot = torch.utils.data.DataLoader(dataset_test_fewshot, 1)
+			train_loader_fewshot = torch.utils.data.DataLoader(dataset_train_fewshot, 1, shuffle=True, worker_init_fn=np.random.seed(0),num_workers=0)
+			test_loader_fewshot = torch.utils.data.DataLoader(dataset_test_fewshot, 1, worker_init_fn=np.random.seed(0),num_workers=0)
 
 			_, train_acc = train(net, "ann", train_loader_fewshot, optimizer, device, 1)
 			_, test_acc = test(net, "ann", test_loader_fewshot, device)
@@ -184,7 +189,7 @@ if __name__ == '__main__':
 
 		for param in net.static_conv.parameters():
 			param.requires_grad = False
-		for param in net.convLayer2.parameters():
+		for param in net.conv.parameters():
 			param.requires_grad = False
 
 		for k in [1, 5, 10]:
@@ -193,17 +198,17 @@ if __name__ == '__main__':
 
 			dataset_train_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=True)
 			dataset_test_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=False)
-			train_loader_fewshot = torch.utils.data.DataLoader(dataset_train_fewshot, 1, shuffle=True)
-			test_loader_fewshot = torch.utils.data.DataLoader(dataset_test_fewshot, 1)
+			train_loader_fewshot = torch.utils.data.DataLoader(dataset_train_fewshot, 1, shuffle=True, worker_init_fn=np.random.seed(0),num_workers=0)
+			test_loader_fewshot = torch.utils.data.DataLoader(dataset_test_fewshot, 1, worker_init_fn=np.random.seed(0),num_workers=0)
 
-			_, train_acc = train(net, "ann", train_loader_fewshot, optimizer, device, 1)
-			_, test_acc = test(net, "ann", test_loader_fewshot, device)
+			_, train_acc = train(net, "snn", train_loader_fewshot, optimizer, device, 1)
+			_, test_acc = test(net, "snn", test_loader_fewshot, device)
 				
 			print("---------------------------------------------------------")
-			ann_logs["{}-shot_train_acc".format(k)].append(train_acc)
-			ann_logs["{}-shot_test_acc".format(k)].append(test_acc)
+			snn_logs["{}-shot_train_acc".format(k)].append(train_acc)
+			snn_logs["{}-shot_test_acc".format(k)].append(test_acc)
 
-			torch.save(net.state_dict(), os.path.join(save_path, "ann.pth"))
+			torch.save(net.state_dict(), os.path.join(save_path, "snn.pth"))
 
-			with open(os.path.join(logs_path,"ann_logs.pickle"), "wb") as file:
-				pickle.dump(ann_logs, file)
+			with open(os.path.join(logs_path,"snn_logs.pickle"), "wb") as file:
+				pickle.dump(snn_logs, file)

@@ -16,6 +16,11 @@ mnist_std = 0.3081
 torch.manual_seed(seed)
 random.seed(seed)
 np.random.seed(seed)
+torch.cuda.manual_seed(0)
+torch.cuda.manual_seed_all(0)
+torch.backends.cudnn.enabled = False
+torch.backends.cudnn.benchmark = False
+torch.backends.cudnn.deterministic = True
 
 def dataset_prepare(targets,data_root, train):
 
