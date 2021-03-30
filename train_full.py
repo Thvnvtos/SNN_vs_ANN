@@ -1,4 +1,5 @@
-import torch, json, os, pickle
+import torch, json, os, pickle, random
+import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -30,6 +31,9 @@ log_interval = 60000//(4*batch_size) # in order to have 5 logs in each epoch dep
 mnist_mean = 0.1307
 mnist_std = 0.3081
 
+torch.manual_seed(seed)
+random.seed(seed)
+np.random.seed(seed)
 
 def train_full(net, mode, train_loader, optimizer, device, epoch):
     

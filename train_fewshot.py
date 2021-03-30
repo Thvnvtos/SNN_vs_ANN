@@ -1,4 +1,5 @@
-import torch, json, os, pickle
+import torch, json, os, pickle, random
+import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -29,6 +30,10 @@ batch_size = config["batch_size"]
 log_interval = 60000//(4*batch_size) # in order to have 5 logs in each epoch depending on the batch_size
 mnist_mean = 0.1307
 mnist_std = 0.3081
+
+torch.manual_seed(seed)
+random.seed(seed)
+np.random.seed(seed)
 
 
 def train(net, mode, train_loader, optimizer, device, epoch):
@@ -63,7 +68,7 @@ def train(net, mode, train_loader, optimizer, device, epoch):
 	print("\n===> Train Epoch Accuracy : {:.2f}%, , Train Average loss: {:.4f}".format(train_acc, train_loss))
 	return train_loss, train_acc
 
-def test_seq(net, mode, test_loader, device):
+def test(net, mode, test_loader, device):
 	net.eval()
 	test_loss = 0
 	correct_pred = 0
@@ -89,25 +94,17 @@ def test_seq(net, mode, test_loader, device):
 
 if __name__ == '__main__':
 
-	torch.manual_seed(seed)
 	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 	if device.type == "cuda":
 		print("Training on {} !".format(torch.cuda.get_device_name()))
 	else:
 		print("Training on CPU :( ")
 
-
 	dataset_train = dataset.dataset_prepare([0,1,2,3,4,5,6], data_root, train=True)
 	dataset_test = dataset.dataset_prepare([0,1,2,3,4,5,6], data_root, train=False)
 
-	dataset_train_fewshot = dataset.dataset_prepare_fewshot([7,8,9], 5, data_root, train=True)
-	dataset_test_fewshot = dataset.dataset_prepare([7,8,9], 5, data_root, train=False)
-
 	train_loader = torch.utils.data.DataLoader(dataset_train, batch_size, shuffle=True)
 	test_loader = torch.utils.data.DataLoader(dataset_test, batch_size)
-
-	train_loader_fewshot = torch.utils.data.DataLoader(dataset_train_fewshot, 1, shuffle=True)
-	test_loader_fewshot = torch.utils.data.DataLoader(dataset_test_fewshot, 1)
 
 
 	if config["train_ann"]:
@@ -119,45 +116,46 @@ if __name__ == '__main__':
 		epochs = config_ann["epochs"]
 		best_acc = 0
 		print("########## Pre-Training ANN for {} Epochs ##########\n".format(epochs))
-		ann_logs = {"train_acc_1":[], "train_acc_2":[], "train_acc_1+2":[],
-					"test_acc_1":[], "test_acc_2":[], "test_acc_1+2":[]}
+		ann_logs = {"pre-train_acc":[], "pre-test_acc":[], 
+					"1-shot_train_acc":[], "1-shot_test_acc":[],
+					"5-shot_train_acc":[], "5-shot_test_acc":[],
+					"10-shot_train_acc":[], "10-shot_test_acc":[]}
 
 		for epoch in range(epochs):
 			
-			_, train_acc = train_seq(net, train_loader_1, optimizer, device, epoch+1)
-			_, test_acc = test_seq(net, test_loader_1, device)
+			_, train_acc = train(net, "ann", train_loader, optimizer, device, epoch+1)
+			_, test_acc = test(net, "ann", test_loader, device)
 			
 			print("------------------------------------------------------")
-			ann_logs["train_acc_1"].append(train_acc)
-			ann_logs["test_acc_1"].append(test_acc)
+			ann_logs["pre-train_acc"].append(train_acc)
+			ann_logs["pre-test_acc"].append(test_acc)
 
 
 		for param in net.convLayer1.parameters():
 			param.requires_grad = False
 		for param in net.convLayer2.parameters():
-	  		param.requires_grad = False
+			param.requires_grad = False
 
-		optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = 1e-3)
-		print("\n===================================================\n")
-		best_acc = 0
-		for epoch in range(epochs):
-			
-			_, train_acc = train_seq(net, train_loader_2, optimizer, device, epoch+1)
-			_, test_acc_2 = test_seq(net, test_loader_2, device)
-			_, test_acc_1 = test_seq(net, test_loader_1, device)
-			
+		for k in [1, 5, 10]:
+			optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = 1e-1)
+			print("\n==================== {}-Shot ==========================\n".format(k))
+
+			dataset_train_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=True)
+			dataset_test_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=False)
+			train_loader_fewshot = torch.utils.data.DataLoader(dataset_train_fewshot, 1, shuffle=True)
+			test_loader_fewshot = torch.utils.data.DataLoader(dataset_test_fewshot, 1)
+
+			_, train_acc = train(net, "ann", train_loader_fewshot, optimizer, device, 1)
+			_, test_acc = test(net, "ann", test_loader_fewshot, device)
+				
 			print("---------------------------------------------------------")
-			ann_logs["train_acc_2"].append(train_acc)
-			ann_logs["test_acc_2"].append(test_acc_2)
-			ann_logs["test_acc_1"].append(test_acc_1)
-			ann_logs["test_acc_1+2"].append((test_acc_1 + test_acc_1) / 2)
+			ann_logs["{}-shot_train_acc".format(k)].append(train_acc)
+			ann_logs["{}-shot_test_acc".format(k)].append(test_acc)
 
-			if test_acc_2 + test_acc_1 + train_acc > best_acc:
-				best_acc = test_acc_2 + test_acc_1 + train_acc
-				torch.save(net.state_dict(), os.path.join(save_path, "ann.pth"))
+			torch.save(net.state_dict(), os.path.join(save_path, "ann.pth"))
 
-		with open(os.path.join(logs_path,"ann_logs.pickle"), "wb") as file:
-			pickle.dump(ann_logs, file)
+			with open(os.path.join(logs_path,"ann_logs.pickle"), "wb") as file:
+				pickle.dump(ann_logs, file)
 	
 
 	if config["train_snn"]:
@@ -168,42 +166,44 @@ if __name__ == '__main__':
 
 		epochs = config_snn["epochs"]
 		best_acc = 0
-		print("########## Training SNN for {} Epochs ##########\n".format(epochs))
-		snn_logs = {"train_acc_1":[], "train_acc_2":[], "train_acc_1+2":[],
-					"test_acc_1":[], "test_acc_2":[], "test_acc_1+2":[]}
+		print("########## Pre-Training SNN for {} Epochs ##########\n".format(epochs))
+		snn_logs = {"pre-train_acc":[], "pre-test_acc":[], 
+					"1-shot_train_acc":[], "1-shot_test_acc":[],
+					"5-shot_train_acc":[], "5-shot_test_acc":[],
+					"10-shot_train_acc":[], "10-shot_test_acc":[]}
 
 		for epoch in range(epochs):
 			
-			_, train_acc = train_seq(net, train_loader_1, optimizer, device, epoch+1)
-			_, test_acc = test_seq(net, test_loader_1, device)
+			_, train_acc = train(net, "snn", train_loader, optimizer, device, epoch+1)
+			_, test_acc = test(net, "snn", test_loader, device)
 			
 			print("------------------------------------------------------")
-			snn_logs["train_acc_1"].append(train_acc)
-			snn_logs["test_acc_1"].append(test_acc)
+			snn_logs["pre-train_acc"].append(train_acc)
+			snn_logs["pre-test_acc"].append(test_acc)
+
 
 		for param in net.static_conv.parameters():
 			param.requires_grad = False
-		for param in net.conv.parameters():
+		for param in net.convLayer2.parameters():
 			param.requires_grad = False
 
-		optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = 2e-5)
-		print("\n========================================================\n")
-		best_acc = 0
-		for epoch in range(epochs):
-			
-			_, train_acc = train_seq(net, train_loader_2, optimizer, device, epoch+1)
-			_, test_acc_2 = test_seq(net, test_loader_2, device)
-			_, test_acc_1 = test_seq(net, test_loader_1, device)
-			
-			print("------------------------------------------------------")
-			snn_logs["train_acc_2"].append(train_acc)
-			snn_logs["test_acc_2"].append(test_acc_2)
-			snn_logs["test_acc_1"].append(test_acc_1)
-			snn_logs["test_acc_1+2"].append((test_acc_1 + test_acc_1) / 2)
+		for k in [1, 5, 10]:
+			optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = 1e-1)
+			print("\n==================== {}-Shot ==========================\n".format(k))
 
-			if test_acc_2 + test_acc_1 + train_acc > best_acc:
-				best_acc = test_acc_2 + test_acc_1 + train_acc
-				torch.save(net.state_dict(), os.path.join(save_path, "snn.pth"))
+			dataset_train_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=True)
+			dataset_test_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=False)
+			train_loader_fewshot = torch.utils.data.DataLoader(dataset_train_fewshot, 1, shuffle=True)
+			test_loader_fewshot = torch.utils.data.DataLoader(dataset_test_fewshot, 1)
 
-		with open(os.path.join(logs_path,"snn_logs.pickle"), "wb") as file:
-			pickle.dump(snn_logs, file)
+			_, train_acc = train(net, "ann", train_loader_fewshot, optimizer, device, 1)
+			_, test_acc = test(net, "ann", test_loader_fewshot, device)
+				
+			print("---------------------------------------------------------")
+			ann_logs["{}-shot_train_acc".format(k)].append(train_acc)
+			ann_logs["{}-shot_test_acc".format(k)].append(test_acc)
+
+			torch.save(net.state_dict(), os.path.join(save_path, "ann.pth"))
+
+			with open(os.path.join(logs_path,"ann_logs.pickle"), "wb") as file:
+				pickle.dump(ann_logs, file)

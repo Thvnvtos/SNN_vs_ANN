@@ -1,8 +1,13 @@
 import torch, random
+import numpy as np
 from torchvision import datasets, transforms
 
 mnist_mean = 0.1307
 mnist_std = 0.3081
+
+torch.manual_seed(seed)
+random.seed(seed)
+np.random.seed(seed)
 
 def dataset_prepare(targets,data_root, train):
 

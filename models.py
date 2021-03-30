@@ -4,7 +4,7 @@ from spikingjelly.clock_driven import neuron, functional, surrogate, layer
 
 class ANN(nn.Module):
     # in_c : input channels, fm : feature maps, ks : kernel size
-    def __init__(self, in_c = 1,fm = [12,64], ks=[5,5]):
+    def __init__(self, in_c = 1,fm = [12,32], ks=[5,5]):
         super().__init__()
         
         self.convLayer1 = nn.Sequential(
@@ -36,7 +36,7 @@ class ANN(nn.Module):
 
 
 class SNN(nn.Module):
-    def __init__(self, in_c = 1,fm = [12,64], ks=[5,5], tau = 2.0, T = 10, v_threshold = 1.0, v_reset = 0.0):
+    def __init__(self, in_c = 1,fm = [12,32], ks=[5,5], tau = 2.0, T = 10, v_threshold = 1.0, v_reset = 0.0):
         super().__init__()
         self.T = T
 
