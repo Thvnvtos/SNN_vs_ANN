@@ -8,8 +8,8 @@ from spikingjelly.clock_driven import neuron, functional, surrogate, layer
 import models, dataset
 
 config_file_path = "config.json"
-logs_path = os.path.join("logs","train_seq")
-save_path = os.path.join("saved_models","train_seq")
+logs_path = os.path.join("logs","train_fewshot")
+save_path = os.path.join("saved_models","train_fewshot")
 
 if not os.path.exists(logs_path):
 	if not os.path.exists("logs"): os.mkdir("logs")
@@ -31,7 +31,7 @@ mnist_mean = 0.1307
 mnist_std = 0.3081
 
 
-def train_seq(net, mode, train_loader, optimizer, device, epoch):
+def train(net, mode, train_loader, optimizer, device, epoch):
 	
 	net.train()
 	correct_pred = 0
@@ -97,17 +97,17 @@ if __name__ == '__main__':
 		print("Training on CPU :( ")
 
 
-	dataset_train_1 = dataset.dataset_prepare([0,1,2,3,4], data_root, train=True)
-	dataset_test_1 = dataset.dataset_prepare([0,1,2,3,4], data_root, train=False)
+	dataset_train = dataset.dataset_prepare([0,1,2,3,4,5,6], data_root, train=True)
+	dataset_test = dataset.dataset_prepare([0,1,2,3,4,5,6], data_root, train=False)
 
-	dataset_train_2 = dataset.dataset_prepare([5,6,7,8,9], data_root, train=True)
-	dataset_test_2 = dataset.dataset_prepare([5,6,7,8,9], data_root, train=False)
+	dataset_train_fewshot = dataset.dataset_prepare_fewshot([7,8,9], 5, data_root, train=True)
+	dataset_test_fewshot = dataset.dataset_prepare([7,8,9], 5, data_root, train=False)
 
-	train_loader_1 = torch.utils.data.DataLoader(dataset_train_1, batch_size, shuffle=True)
-	test_loader_1 = torch.utils.data.DataLoader(dataset_test_1, batch_size)
+	train_loader = torch.utils.data.DataLoader(dataset_train, batch_size, shuffle=True)
+	test_loader = torch.utils.data.DataLoader(dataset_test, batch_size)
 
-	train_loader_2 = torch.utils.data.DataLoader(dataset_train_2, batch_size, shuffle=True)
-	test_loader_2 = torch.utils.data.DataLoader(dataset_test_2, batch_size)
+	train_loader_fewshot = torch.utils.data.DataLoader(dataset_train_fewshot, 1, shuffle=True)
+	test_loader_fewshot = torch.utils.data.DataLoader(dataset_test_fewshot, 1)
 
 
 	if config["train_ann"]:
@@ -118,14 +118,14 @@ if __name__ == '__main__':
 
 		epochs = config_ann["epochs"]
 		best_acc = 0
-		print("########## Training ANN for {} Epochs ##########\n".format(epochs))
+		print("########## Pre-Training ANN for {} Epochs ##########\n".format(epochs))
 		ann_logs = {"train_acc_1":[], "train_acc_2":[], "train_acc_1+2":[],
 					"test_acc_1":[], "test_acc_2":[], "test_acc_1+2":[]}
 
 		for epoch in range(epochs):
 			
-			_, train_acc = train_seq(net, "ann", train_loader_1, optimizer, device, epoch+1)
-			_, test_acc = test_seq(net, "ann", test_loader_1, device)
+			_, train_acc = train_seq(net, train_loader_1, optimizer, device, epoch+1)
+			_, test_acc = test_seq(net, test_loader_1, device)
 			
 			print("------------------------------------------------------")
 			ann_logs["train_acc_1"].append(train_acc)
@@ -137,14 +137,14 @@ if __name__ == '__main__':
 		for param in net.convLayer2.parameters():
 	  		param.requires_grad = False
 
-		optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = 2e-5)
+		optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = 1e-3)
 		print("\n===================================================\n")
 		best_acc = 0
 		for epoch in range(epochs):
 			
-			_, train_acc = train_seq(net, "ann", train_loader_2, optimizer, device, epoch+1)
-			_, test_acc_2 = test_seq(net, "ann", test_loader_2, device)
-			_, test_acc_1 = test_seq(net, "ann", test_loader_1, device)
+			_, train_acc = train_seq(net, train_loader_2, optimizer, device, epoch+1)
+			_, test_acc_2 = test_seq(net, test_loader_2, device)
+			_, test_acc_1 = test_seq(net, test_loader_1, device)
 			
 			print("---------------------------------------------------------")
 			ann_logs["train_acc_2"].append(train_acc)
@@ -174,8 +174,8 @@ if __name__ == '__main__':
 
 		for epoch in range(epochs):
 			
-			_, train_acc = train_seq(net, "snn", train_loader_1, optimizer, device, epoch+1)
-			_, test_acc = test_seq(net, "snn", test_loader_1, device)
+			_, train_acc = train_seq(net, train_loader_1, optimizer, device, epoch+1)
+			_, test_acc = test_seq(net, test_loader_1, device)
 			
 			print("------------------------------------------------------")
 			snn_logs["train_acc_1"].append(train_acc)
@@ -191,9 +191,9 @@ if __name__ == '__main__':
 		best_acc = 0
 		for epoch in range(epochs):
 			
-			_, train_acc = train_seq(net, "snn", train_loader_2, optimizer, device, epoch+1)
-			_, test_acc_2 = test_seq(net, "snn", test_loader_2, device)
-			_, test_acc_1 = test_seq(net, "snn", test_loader_1, device)
+			_, train_acc = train_seq(net, train_loader_2, optimizer, device, epoch+1)
+			_, test_acc_2 = test_seq(net, test_loader_2, device)
+			_, test_acc_1 = test_seq(net, test_loader_1, device)
 			
 			print("------------------------------------------------------")
 			snn_logs["train_acc_2"].append(train_acc)

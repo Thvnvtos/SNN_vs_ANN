@@ -31,7 +31,7 @@ mnist_mean = 0.1307
 mnist_std = 0.3081
 
 
-def train_full(net, train_loader, optimizer, device, epoch):
+def train_full(net, mode, train_loader, optimizer, device, epoch):
     
     net.train()
     correct_pred = 0
@@ -54,7 +54,7 @@ def train_full(net, train_loader, optimizer, device, epoch):
             print("Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(epoch, batch_idx * len(x), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
 
-        if config["train_snn"]:
+        if mode=="snn":
             functional.reset_net(net)
 
     train_acc = 100. * correct_pred / len(train_loader.dataset)
@@ -63,7 +63,7 @@ def train_full(net, train_loader, optimizer, device, epoch):
     print("\n===> Train Epoch Accuracy : {:.2f}%, , Train Average loss: {:.4f}".format(train_acc, train_loss))
     return train_loss, train_acc
 
-def test_full(net, test_loader, device):
+def test_full(net, mode, test_loader, device):
     net.eval()
     test_loss = 0
     correct_pred = 0
@@ -78,7 +78,7 @@ def test_full(net, test_loader, device):
             #pred = y.argmax(dim=1)
             #correct_pred += (pred == label).sum().item()
 
-            if config["train_snn"]:
+            if mode=="snn":
                 functional.reset_net(net)
 
     test_acc = 100. * correct_pred / len(test_loader.dataset)
@@ -120,8 +120,8 @@ if __name__ == '__main__':
         ann_logs = {"train_loss":[], "train_acc":[], "test_loss":[], "test_acc":[]}
         for epoch in range(epochs):
             
-            train_loss, train_acc = train_full(net, train_loader, optimizer, device, epoch+1)
-            test_loss, test_acc = test_full(net, test_loader, device)
+            train_loss, train_acc = train_full(net, "ann", train_loader, optimizer, device, epoch+1)
+            test_loss, test_acc = test_full(net, "ann", test_loader, device)
             
             print("------------------------------------------------------")
             ann_logs["train_loss"].append(train_loss)
@@ -149,8 +149,8 @@ if __name__ == '__main__':
         snn_logs = {"train_loss":[], "train_acc":[], "test_loss":[], "test_acc":[]}
         for epoch in range(epochs):
             
-            train_loss, train_acc = train_full(net, train_loader, optimizer, device, epoch+1)
-            test_loss, test_acc = test_full(net, test_loader, device)
+            train_loss, train_acc = train_full(net, "snn", train_loader, optimizer, device, epoch+1)
+            test_loss, test_acc = test_full(net, "snn", test_loader, device)
             
             print("------------------------------------------------------")
             snn_logs["train_loss"].append(train_loss)
