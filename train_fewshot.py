@@ -27,6 +27,12 @@ data_root = config["data_root"]
 seed = config["seed"]
 batch_size = config["batch_size"]
 
+shots = config["few-shot"]["shots"]
+fs_lr = config["few-shot"]["fs_lr"]
+N = config["few-shot"]["N"]
+batch_size_fs = config["few-shot"]["batch_size"]
+
+
 log_interval = 60000//(4*batch_size) # in order to have 5 logs in each epoch depending on the batch_size
 mnist_mean = 0.1307
 mnist_std = 0.3081
@@ -105,14 +111,11 @@ if __name__ == '__main__':
 	else:
 		print("Training on CPU :( ")
 
-	dataset_train = dataset.dataset_prepare([0,1,2,3,4,5,6], data_root, train=True)
-	dataset_test = dataset.dataset_prepare([0,1,2,3,4,5,6], data_root, train=False)
+	dataset_train = dataset.dataset_prepare([x for x in range(10-N)], data_root, train=True)
+	dataset_test = dataset.dataset_prepare([x for x in range(10-N)], data_root, train=False)
 
 	train_loader = torch.utils.data.DataLoader(dataset_train, batch_size, shuffle=True, worker_init_fn=np.random.seed(0),num_workers=0)
 	test_loader = torch.utils.data.DataLoader(dataset_test, batch_size, worker_init_fn=np.random.seed(0),num_workers=0)
-
-	shots = config["few-shot"]["shots"]
-	fs_lr = config["few-shot"]["fs_lr"]
 
 	if config["train_ann"]:
 		config_ann = config["ann"]
@@ -125,10 +128,6 @@ if __name__ == '__main__':
 		print("########## Pre-Training ANN for {} Epochs ##########\n".format(epochs))
 		ann_logs = {"pre-train_acc":[], "pre-test_acc":[]}
 
-		for k in shots:
-			ann_logs["{}-shot_train_acc".format(k)] = []
-			ann_logs["{}-shot_test_acc".format(k)] = []
-
 		for epoch in range(epochs):
 			
 			_, train_acc = train(net, "ann", train_loader, optimizer, device, epoch+1)
@@ -138,20 +137,29 @@ if __name__ == '__main__':
 			ann_logs["pre-train_acc"].append(train_acc)
 			ann_logs["pre-test_acc"].append(test_acc)
 
-
-		for param in net.convLayer1.parameters():
-			param.requires_grad = False
-		for param in net.convLayer2.parameters():
-			param.requires_grad = False
+		pre_params = net.state_dict()
 
 		for k in shots:
+			
+			net = models.ANN().to(device)
+			net.load_state_dict(pre_params)
+
+			for param in net.convLayer1.parameters():
+				param.requires_grad = False
+			for param in net.convLayer2.parameters():
+				param.requires_grad = False
+
 			optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = fs_lr)
+
+			ann_logs["{}-shot_train_acc".format(k)] = []
+			ann_logs["{}-shot_test_acc".format(k)] = []
+
 			print("\n==================== {}-Shot ==========================\n".format(k))
 
 			dataset_train_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=True)
 			dataset_test_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=False)
-			train_loader_fewshot = torch.utils.data.DataLoader(dataset_train_fewshot, 1, shuffle=True, worker_init_fn=np.random.seed(0),num_workers=0)
-			test_loader_fewshot = torch.utils.data.DataLoader(dataset_test_fewshot, 1, worker_init_fn=np.random.seed(0),num_workers=0)
+			train_loader_fewshot = torch.utils.data.DataLoader(dataset_train_fewshot, batch_size_fs, shuffle=True, worker_init_fn=np.random.seed(0),num_workers=0)
+			test_loader_fewshot = torch.utils.data.DataLoader(dataset_test_fewshot, batch_size_fs, worker_init_fn=np.random.seed(0),num_workers=0)
 
 			_, train_acc = train(net, "ann", train_loader_fewshot, optimizer, device, 1)
 			_, test_acc = test(net, "ann", test_loader_fewshot, device)
@@ -177,10 +185,6 @@ if __name__ == '__main__':
 		print("########## Pre-Training SNN for {} Epochs ##########\n".format(epochs))
 		snn_logs = {"pre-train_acc":[], "pre-test_acc":[]}
 
-		for k in shots:
-			snn_logs["{}-shot_train_acc".format(k)] = []
-			snn_logs["{}-shot_test_acc".format(k)] = []
-
 		for epoch in range(epochs):
 			
 			_, train_acc = train(net, "snn", train_loader, optimizer, device, epoch+1)
@@ -190,20 +194,29 @@ if __name__ == '__main__':
 			snn_logs["pre-train_acc"].append(train_acc)
 			snn_logs["pre-test_acc"].append(test_acc)
 
-
-		for param in net.static_conv.parameters():
-			param.requires_grad = False
-		for param in net.conv.parameters():
-			param.requires_grad = False
+		pre_params = net.state_dict()
 
 		for k in shots:
+
+			net = models.SNN().to(device)
+			net.load_state_dict(pre_params)
+
+			for param in net.static_conv.parameters():
+				param.requires_grad = False
+			for param in net.conv.parameters():
+				param.requires_grad = False
+
 			optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = fs_lr)
+
+			snn_logs["{}-shot_train_acc".format(k)] = []
+			snn_logs["{}-shot_test_acc".format(k)] = []
+
 			print("\n==================== {}-Shot ==========================\n".format(k))
 
 			dataset_train_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=True)
 			dataset_test_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=False)
-			train_loader_fewshot = torch.utils.data.DataLoader(dataset_train_fewshot, 1, shuffle=True, worker_init_fn=np.random.seed(0),num_workers=0)
-			test_loader_fewshot = torch.utils.data.DataLoader(dataset_test_fewshot, 1, worker_init_fn=np.random.seed(0),num_workers=0)
+			train_loader_fewshot = torch.utils.data.DataLoader(dataset_train_fewshot, batch_size_fs, shuffle=True, worker_init_fn=np.random.seed(0),num_workers=0)
+			test_loader_fewshot = torch.utils.data.DataLoader(dataset_test_fewshot, batch_size_fs, worker_init_fn=np.random.seed(0),num_workers=0)
 
 			_, train_acc = train(net, "snn", train_loader_fewshot, optimizer, device, 1)
 			_, test_acc = test(net, "snn", test_loader_fewshot, device)
