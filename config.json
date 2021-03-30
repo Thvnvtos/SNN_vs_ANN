@@ -9,14 +9,20 @@
 
 	"ann" :
 	{
-		"epochs" : 2,
-		"lr" : 1e-4
+		"epochs" : 1,
+		"lr" : 1e-3
 	},
 
 	"snn" :
 	{
-		"epochs" : 2,
-		"lr" : 1e-4
+		"epochs" : 1,
+		"lr" : 1e-3
+	},
+
+	"few-shot":
+	{
+		"shots": [1, 5, 10, 20, 50],
+		"fs_lr": 5e-1
 	}
 
 }

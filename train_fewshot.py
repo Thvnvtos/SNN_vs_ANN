@@ -111,6 +111,8 @@ if __name__ == '__main__':
 	train_loader = torch.utils.data.DataLoader(dataset_train, batch_size, shuffle=True, worker_init_fn=np.random.seed(0),num_workers=0)
 	test_loader = torch.utils.data.DataLoader(dataset_test, batch_size, worker_init_fn=np.random.seed(0),num_workers=0)
 
+	shots = config["few-shot"]["shots"]
+	fs_lr = config["few-shot"]["fs_lr"]
 
 	if config["train_ann"]:
 		config_ann = config["ann"]
@@ -121,10 +123,11 @@ if __name__ == '__main__':
 		epochs = config_ann["epochs"]
 		best_acc = 0
 		print("########## Pre-Training ANN for {} Epochs ##########\n".format(epochs))
-		ann_logs = {"pre-train_acc":[], "pre-test_acc":[], 
-					"1-shot_train_acc":[], "1-shot_test_acc":[],
-					"5-shot_train_acc":[], "5-shot_test_acc":[],
-					"10-shot_train_acc":[], "10-shot_test_acc":[]}
+		ann_logs = {"pre-train_acc":[], "pre-test_acc":[]}
+
+		for k in shots:
+			ann_logs["{}-shot_train_acc".format(k)] = []
+			ann_logs["{}-shot_test_acc".format(k)] = []
 
 		for epoch in range(epochs):
 			
@@ -141,8 +144,8 @@ if __name__ == '__main__':
 		for param in net.convLayer2.parameters():
 			param.requires_grad = False
 
-		for k in [1, 5, 10]:
-			optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = 1e-1)
+		for k in shots:
+			optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = fs_lr)
 			print("\n==================== {}-Shot ==========================\n".format(k))
 
 			dataset_train_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=True)
@@ -172,10 +175,11 @@ if __name__ == '__main__':
 		epochs = config_snn["epochs"]
 		best_acc = 0
 		print("########## Pre-Training SNN for {} Epochs ##########\n".format(epochs))
-		snn_logs = {"pre-train_acc":[], "pre-test_acc":[], 
-					"1-shot_train_acc":[], "1-shot_test_acc":[],
-					"5-shot_train_acc":[], "5-shot_test_acc":[],
-					"10-shot_train_acc":[], "10-shot_test_acc":[]}
+		snn_logs = {"pre-train_acc":[], "pre-test_acc":[]}
+
+		for k in shots:
+			snn_logs["{}-shot_train_acc".format(k)] = []
+			snn_logs["{}-shot_test_acc".format(k)] = []
 
 		for epoch in range(epochs):
 			
@@ -192,8 +196,8 @@ if __name__ == '__main__':
 		for param in net.conv.parameters():
 			param.requires_grad = False
 
-		for k in [1, 5, 10]:
-			optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = 1e-1)
+		for k in shots:
+			optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = fs_lr)
 			print("\n==================== {}-Shot ==========================\n".format(k))
 
 			dataset_train_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=True)
