@@ -1,6 +1,14 @@
-import torch, random
+import torch, random, json
 import numpy as np
 from torchvision import datasets, transforms
+
+config_file_path = "config.json"
+with open(config_file_path) as f:
+	config = json.load(f)
+
+data_root = config["data_root"]
+seed = config["seed"]
+batch_size = config["batch_size"]
 
 mnist_mean = 0.1307
 mnist_std = 0.3081
