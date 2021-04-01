@@ -22,9 +22,10 @@
 	"few-shot":
 	{
 		"N":3,
-		"batch_size":3, 
+		"batch_size_ratio":8, 
+		"reset":false,
 		"shots": [1, 5, 10, 20, 50],
-		"fs_lr": 5e-2
+		"fs_lr": 1e-1
 	}
 
 }

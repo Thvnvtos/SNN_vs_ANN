@@ -30,7 +30,8 @@ batch_size = config["batch_size"]
 shots = config["few-shot"]["shots"]
 fs_lr = config["few-shot"]["fs_lr"]
 N = config["few-shot"]["N"]
-batch_size_fs = config["few-shot"]["batch_size"]
+batch_size_fs_ratio = config["few-shot"]["batch_size_ratio"]
+reset_fs = config["few-shot"]["reset"]
 
 
 log_interval = 60000//(4*batch_size) # in order to have 5 logs in each epoch depending on the batch_size
@@ -76,7 +77,7 @@ def train(net, mode, train_loader, optimizer, device, epoch):
 	train_acc = 100. * correct_pred / len(train_loader.dataset)
 	train_loss /= len(train_loader)
 
-	print("\n===> Train Epoch Accuracy : {:.2f}%, , Train Average loss: {:.4f}".format(train_acc, train_loss))
+	print("\n===> Train Epoch Accuracy : {:.2f}%, , Train Average loss: {:.8f}".format(train_acc, train_loss))
 	return train_loss, train_acc
 
 def test(net, mode, test_loader, device):
@@ -99,7 +100,7 @@ def test(net, mode, test_loader, device):
 
 	test_acc = 100. * correct_pred / len(test_loader.dataset)
 	test_loss /= len(test_loader) 
-	print("===> Test Accuracy : {:.2f}%, Test Average loss: {:.4f}".format(test_acc, test_loss))
+	print("===> Test Accuracy : {:.2f}%, Test Average loss: {:.8f}".format(test_acc, test_loss))
 
 	return test_loss, test_acc
 
@@ -148,14 +149,19 @@ if __name__ == '__main__':
 				param.requires_grad = False
 			for param in net.convLayer2.parameters():
 				param.requires_grad = False
+			for layer in net.fc.children():
+				if hasattr(layer, 'reset_parameters') and reset_fs:
+					layer.reset_parameters()
 
 			optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = fs_lr)
 
 			ann_logs["{}-shot_train_acc".format(k)] = []
 			ann_logs["{}-shot_test_acc".format(k)] = []
+			ann_logs["{}-shot_pre-test_acc".format(k)] = []
 
 			print("\n==================== {}-Shot ==========================\n".format(k))
 
+			batch_size_fs = max((N*k)//batch_size_fs_ratio,1)
 			dataset_train_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=True)
 			dataset_test_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=False)
 			train_loader_fewshot = torch.utils.data.DataLoader(dataset_train_fewshot, batch_size_fs, shuffle=True, worker_init_fn=np.random.seed(0),num_workers=0)
@@ -163,10 +169,12 @@ if __name__ == '__main__':
 
 			_, train_acc = train(net, "ann", train_loader_fewshot, optimizer, device, 1)
 			_, test_acc = test(net, "ann", test_loader_fewshot, device)
+			_, pre_test_acc = test(net, "ann", test_loader, device)
 				
 			print("---------------------------------------------------------")
 			ann_logs["{}-shot_train_acc".format(k)].append(train_acc)
 			ann_logs["{}-shot_test_acc".format(k)].append(test_acc)
+			ann_logs["{}-shot_pre-test_acc".format(k)].append(pre_test_acc)
 
 			torch.save(net.state_dict(), os.path.join(save_path, "ann.pth"))
 
@@ -206,13 +214,19 @@ if __name__ == '__main__':
 			for param in net.conv.parameters():
 				param.requires_grad = False
 
+			for layer in net.fc.children():
+				if hasattr(layer, 'reset_parameters') and reset_fs:
+					layer.reset_parameters()
+
 			optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = fs_lr)
 
 			snn_logs["{}-shot_train_acc".format(k)] = []
 			snn_logs["{}-shot_test_acc".format(k)] = []
+			snn_logs["{}-shot_pre-test_acc".format(k)] = []
 
 			print("\n==================== {}-Shot ==========================\n".format(k))
 
+			batch_size_fs = max((N*k)//batch_size_fs_ratio,1)
 			dataset_train_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=True)
 			dataset_test_fewshot = dataset.dataset_prepare_fewshot([7,8,9], k, data_root, train=False)
 			train_loader_fewshot = torch.utils.data.DataLoader(dataset_train_fewshot, batch_size_fs, shuffle=True, worker_init_fn=np.random.seed(0),num_workers=0)
@@ -220,10 +234,12 @@ if __name__ == '__main__':
 
 			_, train_acc = train(net, "snn", train_loader_fewshot, optimizer, device, 1)
 			_, test_acc = test(net, "snn", test_loader_fewshot, device)
+			_, pre_test_acc = test(net, "snn", test_loader, device)
 				
 			print("---------------------------------------------------------")
 			snn_logs["{}-shot_train_acc".format(k)].append(train_acc)
 			snn_logs["{}-shot_test_acc".format(k)].append(test_acc)
+			snn_logs["{}-shot_pre-test_acc".format(k)].append(pre_test_acc)
 
 			torch.save(net.state_dict(), os.path.join(save_path, "snn.pth"))
 

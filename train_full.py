@@ -69,7 +69,7 @@ def train_full(net, mode, train_loader, optimizer, device, epoch):
     train_acc = 100. * correct_pred / len(train_loader.dataset)
     train_loss /= len(train_loader)
 
-    print("\n===> Train Epoch Accuracy : {:.2f}%, , Train Average loss: {:.4f}".format(train_acc, train_loss))
+    print("\n===> Train Epoch Accuracy : {:.2f}%, , Train Average loss: {:.8f}".format(train_acc, train_loss))
     return train_loss, train_acc
 
 def test_full(net, mode, test_loader, device):
@@ -92,7 +92,7 @@ def test_full(net, mode, test_loader, device):
 
     test_acc = 100. * correct_pred / len(test_loader.dataset)
     test_loss /= len(test_loader) 
-    print("===> Test Accuracy : {:.2f}%, Test Average loss: {:.4f}".format(test_acc, test_loss))
+    print("===> Test Accuracy : {:.2f}%, Test Average loss: {:.8f}".format(test_acc, test_loss))
 
     return test_loss, test_acc
 
