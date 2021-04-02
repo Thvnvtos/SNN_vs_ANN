@@ -25,3 +25,9 @@ def set_seed(seed):
 	torch.backends.cudnn.enabled = False
 	torch.backends.cudnn.benchmark = False
 	torch.backends.cudnn.deterministic = True
+
+def debug_print(debug):
+
+	if debug["gpu_mem"]:
+		t = int(torch.cuda.get_device_properties(0).total_memory / 1e6)
+		print("Allocated : {} / {},  Reserved : {} / {}".format(int(torch.cuda.memory_allocated(0)/1e6), t, int(torch.cuda.memory_reserved(0)/1e6), t))

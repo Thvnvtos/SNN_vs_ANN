@@ -30,6 +30,7 @@ freeze_conv2 = config["freeze_conv2"]
 loss_ann = config["loss_ann"]
 loss_snn = config["loss_snn"]
 T = config["snn_T"]
+debug = config["debug"]
 
 mnist_mean = 0.1307
 mnist_std = 0.3081
@@ -69,10 +70,11 @@ if __name__ == '__main__':
 					"test_acc_1":[], "test_acc_2":[]}
 		best_acc = 0
 		for epoch in range(epochs1):
-			print("============ ANN1 - epoch {} / {}".format(epoch, epochs1))
+			print("============ ANN1 - epoch {} / {}".format(epoch+1, epochs1))
 			_, train_acc = func.train(net, "ann", train_loader_1, optimizer, device, epoch+1,loss_f=loss_ann)
 			_, test_acc = func.test(net, "ann", test_loader_1, device, loss_f=loss_ann)
 			
+			utils.debug_print(debug)
 			print("------------------------------------------------------")
 			ann_logs["train_acc_1"].append(train_acc)
 			ann_logs["test_acc_1"].append(test_acc)
@@ -89,11 +91,12 @@ if __name__ == '__main__':
 		print("\n################ Training Phase 2 - ANN for {} Epochs ################\n".format(epochs2))
 		best_acc = 0
 		for epoch in range(epochs2):
-			print("============ ANN2 - epoch {} / {}".format(epoch, epochs2))
+			print("============ ANN2 - epoch {} / {}".format(epoch+1, epochs2))
 			_, train_acc = func.train(net, "ann", train_loader_2, optimizer, device, epoch+1, loss_f=loss_ann)
 			_, test_acc_2 = func.test(net, "ann", test_loader_2, device, loss_f=loss_ann)
 			_, test_acc_1 = func.test(net, "ann", test_loader_1, device, loss_f=loss_ann) 
 			
+			utils.debug_print(debug)
 			print("---------------------------------------------------------")
 			ann_logs["train_acc_2"].append(train_acc)
 			ann_logs["test_acc_2"].append(test_acc_2)
@@ -117,10 +120,11 @@ if __name__ == '__main__':
 					"test_acc_1":[], "test_acc_2":[]}
 		best_acc = 0
 		for epoch in range(epochs1):
-			print("============ SNN1 - epoch {} / {}".format(epoch, epochs1))
+			print("============ SNN1 - epoch {} / {}".format(epoch+1, epochs1))
 			_, train_acc = func.train(net, "snn", train_loader_1, optimizer, device, epoch+1,loss_f=loss_snn)
 			_, test_acc = func.test(net, "snn", test_loader_1, device, loss_f=loss_snn)
 			
+			utils.debug_print(debug)
 			print("------------------------------------------------------")
 			snn_logs["train_acc_1"].append(train_acc)
 			snn_logs["test_acc_1"].append(test_acc)
@@ -137,11 +141,12 @@ if __name__ == '__main__':
 		print("\n########## Training Phase 2 - SNN for {} Epochs ############\n".format(epochs2))
 		best_acc = 0
 		for epoch in range(epochs2):
-			print("============ SNN2 - epoch {} / {}".format(epoch, epochs2))
+			print("============ SNN2 - epoch {} / {}".format(epoch+1, epochs2))
 			_, train_acc = func.train(net, "snn", train_loader_2, optimizer, device, epoch+1, loss_f=loss_snn)
 			_, test_acc_2 = func.test(net, "snn", test_loader_2, device, loss_f=loss_snn)
 			_, test_acc_1 = func.test(net, "snn", test_loader_1, device, loss_f=loss_snn) 
 			
+			utils.debug_print(debug)
 			print("---------------------------------------------------------")
 			snn_logs["train_acc_2"].append(train_acc)
 			snn_logs["test_acc_2"].append(test_acc_2)

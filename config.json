@@ -25,7 +25,12 @@
 
 		"dropout" : 0.5,
 
-		"snn_T" : 5
+		"snn_T" : 5,
+
+
+		"debug":{
+			"gpu_mem":true
+		}
 	},
 
 
