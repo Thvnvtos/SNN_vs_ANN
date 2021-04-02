@@ -1,4 +1,34 @@
 {
+
+	"train_seq" :
+	{
+		"train_ann" : true,
+		"train_snn" : true,
+		"data_root" : "data",
+		"seed" : 11,
+		"batch_size" : 64,
+		"save_best_weights" : false,
+		"labels_phase_1" : [0, 1, 2, 3, 4],
+		"labels_phase_2" : [5, 6, 7, 8, 9],
+		
+		"loss_snn" : "mse",
+		"loss_ann" : "mse",	
+
+		"epochs_phase_1" : 1,
+		"lr_phase_1" : 1e-3,
+
+		"epochs_phase_2" : 1,
+		"lr_phase_2" : 1e-3,
+
+		"freeze_conv1" : true,
+		"freeze_conv2" : true,
+
+		"dropout" : 0.5,
+
+		"snn_T" : 5
+	},
+
+
 	"train_ann" : true,
 	"train_snn" : true,
 
