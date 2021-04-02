@@ -64,12 +64,12 @@ if __name__ == '__main__':
 		net = models.ANN(dropout=dropout).to(device)
 		optimizer = optim.Adam(net.parameters(), lr = lr1)
 
-		print("########## Training Phase 1 - ANN for {} Epochs ##########\n".format(epochs1))
+		print("\n################ Training Phase 1 - ANN for {} Epochs ################\n".format(epochs1))
 		ann_logs = {"train_acc_1":[], "train_acc_2":[],
 					"test_acc_1":[], "test_acc_2":[]}
 		best_acc = 0
 		for epoch in range(epochs1):
-			
+			print("============ ANN1 - epoch {} / {}".format(epoch, epochs1))
 			_, train_acc = func.train(net, "ann", train_loader_1, optimizer, device, epoch+1,loss_f=loss_ann)
 			_, test_acc = func.test(net, "ann", test_loader_1, device, loss_f=loss_ann)
 			
@@ -86,10 +86,10 @@ if __name__ == '__main__':
 	  			param.requires_grad = False
 
 		optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = lr2)
-		print("\n########## Training Phase 2 - ANN for {} Epochs ############\n".format(epochs2))
+		print("\n################ Training Phase 2 - ANN for {} Epochs ################\n".format(epochs2))
 		best_acc = 0
 		for epoch in range(epochs2):
-			
+			print("============ ANN2 - epoch {} / {}".format(epoch, epochs2))
 			_, train_acc = func.train(net, "ann", train_loader_2, optimizer, device, epoch+1, loss_f=loss_ann)
 			_, test_acc_2 = func.test(net, "ann", test_loader_2, device, loss_f=loss_ann)
 			_, test_acc_1 = func.test(net, "ann", test_loader_1, device, loss_f=loss_ann) 
@@ -117,7 +117,7 @@ if __name__ == '__main__':
 					"test_acc_1":[], "test_acc_2":[]}
 		best_acc = 0
 		for epoch in range(epochs1):
-			
+			print("============ SNN1 - epoch {} / {}".format(epoch, epochs1))
 			_, train_acc = func.train(net, "snn", train_loader_1, optimizer, device, epoch+1,loss_f=loss_snn)
 			_, test_acc = func.test(net, "snn", test_loader_1, device, loss_f=loss_snn)
 			
@@ -137,7 +137,7 @@ if __name__ == '__main__':
 		print("\n########## Training Phase 2 - SNN for {} Epochs ############\n".format(epochs2))
 		best_acc = 0
 		for epoch in range(epochs2):
-			
+			print("============ SNN2 - epoch {} / {}".format(epoch, epochs2))
 			_, train_acc = func.train(net, "snn", train_loader_2, optimizer, device, epoch+1, loss_f=loss_snn)
 			_, test_acc_2 = func.test(net, "snn", test_loader_2, device, loss_f=loss_snn)
 			_, test_acc_1 = func.test(net, "snn", test_loader_1, device, loss_f=loss_snn) 
