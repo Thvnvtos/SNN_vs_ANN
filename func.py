@@ -7,7 +7,7 @@ from torchvision import datasets, transforms
 from spikingjelly.clock_driven import neuron, functional, surrogate, layer
 
 
-def train(net, mode, train_loader, optimizer, device, epoch, loss_f):
+def train(net, mode, train_loader, optimizer, device, epoch, loss_f, custom_plasticity):
 	
 	net.train()
 	correct_pred, train_loss = 0, 0
@@ -28,6 +28,13 @@ def train(net, mode, train_loader, optimizer, device, epoch, loss_f):
 			correct_pred += (pred == label).sum().item()
 
 		loss.backward()
+		if custom_plasticity:
+			for p in net.parameters():
+				q1 = p.quantile(0.95).item()
+				q2 = (-p).quantile(0.95).item()
+				p.grad = (p<q1)*(-p<q2)*p.grad
+				#p.grad = (p>=q)*(p.grad/100) + (p<q)*(p.grad)
+
 		optimizer.step()
 		train_loss += loss.item()
 		if mode=="snn":
@@ -72,3 +79,8 @@ def test(net, mode, test_loader, device, loss_f):
 	
 	print("===> Test Accuracy : {:.2f}%, Test Average loss: {:.8f}".format(test_acc, test_loss))
 	return test_loss, test_acc
+
+
+def save_model(net, path):
+	torch.save(net.state_dict(), path)
+

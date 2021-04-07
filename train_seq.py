@@ -27,10 +27,14 @@ epochs1 = config["epochs_phase_1"]
 epochs2 = config["epochs_phase_2"]
 freeze_conv1 = config["freeze_conv1"]
 freeze_conv2 = config["freeze_conv2"]
+freeze_used = config["freeze_used_synapses"]
+custom_plasticity = config["custom_plasticity"]
 loss_ann = config["loss_ann"]
 loss_snn = config["loss_snn"]
 T = config["snn_T"]
 debug = config["debug"]
+save_k = config["save_every_k_epoch"]
+
 
 mnist_mean = 0.1307
 mnist_std = 0.3081
@@ -71,10 +75,12 @@ if __name__ == '__main__':
 		best_acc = 0
 		for epoch in range(epochs1):
 			print("============ ANN1 - epoch {} / {}".format(epoch+1, epochs1))
-			_, train_acc = func.train(net, "ann", train_loader_1, optimizer, device, epoch+1,loss_f=loss_ann)
+			_, train_acc = func.train(net, "ann", train_loader_1, optimizer, device, epoch+1,loss_f=loss_ann, custom_plasticity=False)
 			_, test_acc = func.test(net, "ann", test_loader_1, device, loss_f=loss_ann)
 			
 			utils.debug_print(debug)
+			if save_k > 0 and (epoch+1)%save_k == 0:
+				func.save_model(net, os.path.join("saved_models", "train_seq", "ann_{}.pth".format(epoch+1)))
 			print("------------------------------------------------------")
 			ann_logs["train_acc_1"].append(train_acc)
 			ann_logs["test_acc_1"].append(test_acc)
@@ -85,18 +91,21 @@ if __name__ == '__main__':
 				param.requires_grad = False
 		if freeze_conv2:
 			for param in net.convLayer2.parameters():
-	  			param.requires_grad = False
+				param.requires_grad = False
+
 
 		optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = lr2)
 		print("\n################ Training Phase 2 - ANN for {} Epochs ################\n".format(epochs2))
 		best_acc = 0
 		for epoch in range(epochs2):
 			print("============ ANN2 - epoch {} / {}".format(epoch+1, epochs2))
-			_, train_acc = func.train(net, "ann", train_loader_2, optimizer, device, epoch+1, loss_f=loss_ann)
+			_, train_acc = func.train(net, "ann", train_loader_2, optimizer, device, epoch+1, loss_f=loss_ann, custom_plasticity=custom_plasticity)
 			_, test_acc_2 = func.test(net, "ann", test_loader_2, device, loss_f=loss_ann)
 			_, test_acc_1 = func.test(net, "ann", test_loader_1, device, loss_f=loss_ann) 
 			
 			utils.debug_print(debug)
+			if save_k > 0 and (epoch+1)%save_k == 0:
+				func.save_model(net, os.path.join("saved_models", "train_seq", "ann2_{}.pth".format(epoch+1)))
 			print("---------------------------------------------------------")
 			ann_logs["train_acc_2"].append(train_acc)
 			ann_logs["test_acc_2"].append(test_acc_2)
@@ -121,10 +130,12 @@ if __name__ == '__main__':
 		best_acc = 0
 		for epoch in range(epochs1):
 			print("============ SNN1 - epoch {} / {}".format(epoch+1, epochs1))
-			_, train_acc = func.train(net, "snn", train_loader_1, optimizer, device, epoch+1,loss_f=loss_snn)
+			_, train_acc = func.train(net, "snn", train_loader_1, optimizer, device, epoch+1,loss_f=loss_snn, custom_plasticity=False)
 			_, test_acc = func.test(net, "snn", test_loader_1, device, loss_f=loss_snn)
 			
 			utils.debug_print(debug)
+			if save_k > 0 and (epoch+1)%save_k == 0:
+				func.save_model(net, os.path.join("saved_models", "train_seq", "snn_{}.pth".format(epoch+1)))
 			print("------------------------------------------------------")
 			snn_logs["train_acc_1"].append(train_acc)
 			snn_logs["test_acc_1"].append(test_acc)
@@ -135,18 +146,20 @@ if __name__ == '__main__':
 				param.requires_grad = False
 		if freeze_conv2:
 			for param in net.conv.parameters():
-	  			param.requires_grad = False
+				param.requires_grad = False
 
 		optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr = lr2)
 		print("\n########## Training Phase 2 - SNN for {} Epochs ############\n".format(epochs2))
 		best_acc = 0
 		for epoch in range(epochs2):
 			print("============ SNN2 - epoch {} / {}".format(epoch+1, epochs2))
-			_, train_acc = func.train(net, "snn", train_loader_2, optimizer, device, epoch+1, loss_f=loss_snn)
+			_, train_acc = func.train(net, "snn", train_loader_2, optimizer, device, epoch+1, loss_f=loss_snn, custom_plasticity=custom_plasticity)
 			_, test_acc_2 = func.test(net, "snn", test_loader_2, device, loss_f=loss_snn)
 			_, test_acc_1 = func.test(net, "snn", test_loader_1, device, loss_f=loss_snn) 
 			
 			utils.debug_print(debug)
+			if save_k > 0 and (epoch+1)%save_k == 0:
+				func.save_model(net, os.path.join("saved_models", "train_seq", "snn2_{}.pth".format(epoch+1)))
 			print("---------------------------------------------------------")
 			snn_logs["train_acc_2"].append(train_acc)
 			snn_logs["test_acc_2"].append(test_acc_2)

@@ -58,13 +58,22 @@ class SNN(nn.Module):
             )
 
         self.dim2 = (self.dim1 - ks[1] + 1) // 2
-        self.fc = nn.Sequential(
-            nn.Flatten(),
-            layer.Dropout(dropout),
-            nn.Linear(nf[1]*self.dim2**2, 10, bias=False),
-            #neuron.LIFNode(tau=tau, v_threshold=v_threshold, v_reset=v_reset, surrogate_function=surrogate.ATan())
-            neuron.IFNode(v_threshold=v_threshold, v_reset=v_reset, surrogate_function=surrogate.ATan(), detach_reset=True)
-            )
+        
+        if dropout>0:
+            self.fc = nn.Sequential(
+                nn.Flatten(),
+                layer.Dropout(dropout),
+                nn.Linear(nf[1]*self.dim2**2, 10, bias=False),
+                #neuron.LIFNode(tau=tau, v_threshold=v_threshold, v_reset=v_reset, surrogate_function=surrogate.ATan())
+                neuron.IFNode(v_threshold=v_threshold, v_reset=v_reset, surrogate_function=surrogate.ATan(), detach_reset=True)
+                )
+        else:
+            self.fc = nn.Sequential(
+                nn.Flatten(),
+                nn.Linear(nf[1]*self.dim2**2, 10, bias=False),
+                #neuron.LIFNode(tau=tau, v_threshold=v_threshold, v_reset=v_reset, surrogate_function=surrogate.ATan())
+                neuron.IFNode(v_threshold=v_threshold, v_reset=v_reset, surrogate_function=surrogate.ATan(), detach_reset=True)
+                )
 
     def forward(self, x):
         x = self.static_conv(x)

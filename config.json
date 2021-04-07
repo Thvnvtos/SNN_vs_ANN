@@ -18,18 +18,21 @@
 		"lr_phase_1" : 1e-3,
 
 		"epochs_phase_2" : 1,
-		"lr_phase_2" : 1e-3,
+		"lr_phase_2" : 1e-4,
 
 		"freeze_conv1" : true,
 		"freeze_conv2" : true,
+		"freeze_used_synapses" : true,
+		"custom_plasticity" : true,
 
-		"dropout" : 0.5,
+		"dropout" : 0,
 
 		"snn_T" : 5,
 
+		"save_every_k_epoch": 5,
 
 		"debug":{
-			"gpu_mem":true
+			"gpu_mem":false
 		}
 	},
 
