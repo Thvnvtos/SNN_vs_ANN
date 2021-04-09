@@ -22,13 +22,14 @@
 
 		"freeze_conv1" : true,
 		"freeze_conv2" : true,
-		"freeze_used_synapses" : true,
+
 		"custom_plasticity" : true,
+		"snn_use_softmax":false,
 
 		"dropout" : 0,
 
-		"snn_T" : 5,
-
+		"snn_T" : 2,
+		
 		"save_every_k_epoch": 5,
 
 		"debug":{

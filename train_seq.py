@@ -27,8 +27,8 @@ epochs1 = config["epochs_phase_1"]
 epochs2 = config["epochs_phase_2"]
 freeze_conv1 = config["freeze_conv1"]
 freeze_conv2 = config["freeze_conv2"]
-freeze_used = config["freeze_used_synapses"]
 custom_plasticity = config["custom_plasticity"]
+snn_use_softmax = config["snn_use_softmax"]
 loss_ann = config["loss_ann"]
 loss_snn = config["loss_snn"]
 T = config["snn_T"]
@@ -121,7 +121,7 @@ if __name__ == '__main__':
 
 	if config["train_snn"]:
 
-		net = models.SNN(T=T, dropout=dropout).to(device)
+		net = models.SNN(T=T, dropout=dropout, use_softmax=snn_use_softmax).to(device)
 		optimizer = optim.Adam(net.parameters(), lr = lr1)
 
 		print("########## Training Phase 1 - SNN for {} Epochs ##########\n".format(epochs1))

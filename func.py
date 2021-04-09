@@ -28,6 +28,7 @@ def train(net, mode, train_loader, optimizer, device, epoch, loss_f, custom_plas
 			correct_pred += (pred == label).sum().item()
 
 		loss.backward()
+		
 		if custom_plasticity:
 			for p in net.parameters():
 				q1 = p.quantile(0.95).item()
