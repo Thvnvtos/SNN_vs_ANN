@@ -124,7 +124,7 @@ if __name__ == '__main__':
 
 	if config["train_snn"]:
 
-		net = models.SNN(T=T, dropout=dropout, use_softmax=snn_use_softmax, v_threshold = v_threshold, lif=lif, tau=tau).to(device)
+		net = models.SNN_cuda(T=T, dropout=dropout, use_softmax=snn_use_softmax, v_threshold = v_threshold, lif=lif, tau=tau).to(device)
 		optimizer = optim.Adam(net.parameters(), lr = lr1)
 
 		print("########## Training Phase 1 - SNN for {} Epochs ##########\n".format(epochs1))
