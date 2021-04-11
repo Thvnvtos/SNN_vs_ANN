@@ -38,7 +38,7 @@ class ANN(nn.Module):
 
 
 class SNN(nn.Module):
-	def __init__(self, in_c = 1,nf = [16,32], ks=[5,5], T = 10, v_threshold = 1.0, v_reset = 0.0, dropout=0.5, use_softmax = False):
+	def __init__(self, in_c = 1,nf = [16,32], ks=[5,5], T = 10, v_threshold = 1.0, v_reset = 0.0, dropout=0.5, use_softmax = False, tau=2.0, lif=False):
 		super().__init__()
 		self.T = T
 		self.use_softmax = use_softmax
@@ -58,6 +58,9 @@ class SNN(nn.Module):
 			neuron.IFNode(v_threshold=v_threshold, v_reset=v_reset, surrogate_function=surrogate.ATan(), detach_reset=True),
 			nn.MaxPool2d(2, 2)
 			)
+		if lif:
+			self.conv[0] = neuron.LIFNode(tau=tau, v_threshold=v_threshold, v_reset=v_reset, surrogate_function=surrogate.ATan())
+			self.conv[4] = neuron.LIFNode(tau=tau, v_threshold=v_threshold, v_reset=v_reset, surrogate_function=surrogate.ATan())
 
 		self.dim2 = (self.dim1 - ks[1] + 1) // 2
 		
@@ -74,7 +77,10 @@ class SNN(nn.Module):
 				nn.Linear(nf[1]*self.dim2**2, 10, bias=False),
 				neuron.IFNode(v_threshold=v_threshold, v_reset=v_reset, surrogate_function=surrogate.ATan(), detach_reset=True)
 				)
-
+			
+		if lif:
+			self.fc[-1] = neuron.LIFNode(tau=tau, v_threshold=v_threshold, v_reset=v_reset, surrogate_function=surrogate.ATan())
+			
 		if self.use_softmax:
 			self.softmax = nn.Softmax(dim=1)
 
@@ -83,6 +89,7 @@ class SNN(nn.Module):
 		out_spikes_counter = self.fc(self.conv(x))
 		for t in range(1, self.T):
 			out_spikes_counter += self.fc(self.conv(x))
+
 
 		if self.use_softmax:
 			return self.softmax(out_spikes_counter)

@@ -2,7 +2,7 @@
 
 	"train_seq" :
 	{
-		"train_ann" : true,
+		"train_ann" : false,
 		"train_snn" : true,
 		"data_root" : "data",
 		"seed" : 11,
@@ -26,6 +26,9 @@
 		"custom_plasticity" : true,
 		"snn_use_softmax":false,
 
+		"v_threshold":1.0,
+		"tau":2.0,
+		"LIF":true,
 		"dropout" : 0,
 
 		"snn_T" : 2,
