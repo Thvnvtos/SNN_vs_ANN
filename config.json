@@ -23,7 +23,7 @@
 		"freeze_conv1" : true,
 		"freeze_conv2" : true,
 
-		"custom_plasticity" : true,
+		"custom_plasticity" : false,
 		"snn_use_softmax":false,
 
 		"v_threshold":1.0,
