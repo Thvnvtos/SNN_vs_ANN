@@ -20,16 +20,19 @@
 		"epochs_phase_2" : 1,
 		"lr_phase_2" : 1e-4,
 
-		"freeze_conv1" : true,
-		"freeze_conv2" : true,
+		"freeze_conv1" : false,
+		"freeze_conv2" : false,
 
 		"custom_plasticity" : false,
 		"snn_use_softmax":false,
 
 		"v_threshold":1.0,
 		"tau":2.0,
-		"LIF":true,
+		"LIF":false,
+		
 		"dropout" : 0,
+
+		"sparse_reg" : 1e-3,
 
 		"snn_T" : 2,
 		

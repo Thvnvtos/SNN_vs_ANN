@@ -29,6 +29,7 @@ freeze_conv1 = config["freeze_conv1"]
 freeze_conv2 = config["freeze_conv2"]
 custom_plasticity = config["custom_plasticity"]
 snn_use_softmax = config["snn_use_softmax"]
+sparse_reg = config["sparse_reg"]
 v_threshold = config["v_threshold"]
 tau = config["tau"]
 lif = config["LIF"]
@@ -78,7 +79,7 @@ if __name__ == '__main__':
 		best_acc = 0
 		for epoch in range(epochs1):
 			print("============ ANN1 - epoch {} / {}".format(epoch+1, epochs1))
-			_, train_acc = func.train(net, "ann", train_loader_1, optimizer, device, epoch+1,loss_f=loss_ann, custom_plasticity=False)
+			_, train_acc = func.train(net, "ann", train_loader_1, optimizer, device, epoch+1,loss_f=loss_ann)
 			_, test_acc = func.test(net, "ann", test_loader_1, device, loss_f=loss_ann)
 			
 			utils.debug_print(debug)
@@ -102,7 +103,7 @@ if __name__ == '__main__':
 		best_acc = 0
 		for epoch in range(epochs2):
 			print("============ ANN2 - epoch {} / {}".format(epoch+1, epochs2))
-			_, train_acc = func.train(net, "ann", train_loader_2, optimizer, device, epoch+1, loss_f=loss_ann, custom_plasticity=custom_plasticity)
+			_, train_acc = func.train(net, "ann", train_loader_2, optimizer, device, epoch+1, loss_f=loss_ann)
 			_, test_acc_2 = func.test(net, "ann", test_loader_2, device, loss_f=loss_ann)
 			_, test_acc_1 = func.test(net, "ann", test_loader_1, device, loss_f=loss_ann) 
 			
@@ -124,7 +125,7 @@ if __name__ == '__main__':
 
 	if config["train_snn"]:
 
-		net = models.SNN_cuda(T=T, dropout=dropout, use_softmax=snn_use_softmax, v_threshold = v_threshold, lif=lif, tau=tau).to(device)
+		net = models.SNN(T=T, dropout=dropout, use_softmax=snn_use_softmax, v_threshold = v_threshold, lif=lif, tau=tau).to(device)
 		optimizer = optim.Adam(net.parameters(), lr = lr1)
 
 		print("########## Training Phase 1 - SNN for {} Epochs ##########\n".format(epochs1))
@@ -133,7 +134,7 @@ if __name__ == '__main__':
 		best_acc = 0
 		for epoch in range(epochs1):
 			print("============ SNN1 - epoch {} / {}".format(epoch+1, epochs1))
-			_, train_acc = func.train(net, "snn", train_loader_1, optimizer, device, epoch+1,loss_f=loss_snn, custom_plasticity=False)
+			_, train_acc = func.train(net, "snn", train_loader_1, optimizer, device, epoch+1,loss_f=loss_snn, sparse_reg=sparse_reg)
 			_, test_acc = func.test(net, "snn", test_loader_1, device, loss_f=loss_snn)
 			
 			utils.debug_print(debug)
@@ -156,7 +157,7 @@ if __name__ == '__main__':
 		best_acc = 0
 		for epoch in range(epochs2):
 			print("============ SNN2 - epoch {} / {}".format(epoch+1, epochs2))
-			_, train_acc = func.train(net, "snn", train_loader_2, optimizer, device, epoch+1, loss_f=loss_snn, custom_plasticity=custom_plasticity)
+			_, train_acc = func.train(net, "snn", train_loader_2, optimizer, device, epoch+1, loss_f=loss_snn, sparse_reg=sparse_reg)
 			_, test_acc_2 = func.test(net, "snn", test_loader_2, device, loss_f=loss_snn)
 			_, test_acc_1 = func.test(net, "snn", test_loader_1, device, loss_f=loss_snn) 
 			

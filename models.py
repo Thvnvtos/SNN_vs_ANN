@@ -80,13 +80,15 @@ class SNN(nn.Module):
 
 	def forward(self, x):
 		x = self.static_conv(x)
-		out_spikes_counter = self.fc(self.conv(x))
+		x2 = self.conv(x).unsqueeze(0)
+		out_spikes_counter = self.fc(x2[-1])
 		for t in range(1, self.T):
-			out_spikes_counter += self.fc(self.conv(x))
-
+			x2 = torch.cat([x2, self.conv(x).unsqueeze(0)])
+			out_spikes_counter += self.fc(x2[-1])
+		
 		if self.use_softmax:
 			return self.softmax(out_spikes_counter)
-		return out_spikes_counter / self.T
+		return out_spikes_counter / self.T, x2
 
 
 class SNN_cuda(nn.Module):

@@ -7,7 +7,7 @@ from torchvision import datasets, transforms
 from spikingjelly.clock_driven import neuron, functional, surrogate, layer
 
 
-def train(net, mode, train_loader, optimizer, device, epoch, loss_f, custom_plasticity):
+def train(net, mode, train_loader, optimizer, device, epoch, loss_f, custom_plasticity=False, sparse_reg=0):
 	
 	net.train()
 	correct_pred, train_loss = 0, 0
@@ -16,8 +16,10 @@ def train(net, mode, train_loader, optimizer, device, epoch, loss_f, custom_plas
 		
 		x, label = x.to(device), label.to(device)
 		optimizer.zero_grad()
-		y = net(x)
-
+		
+		if mode == "ann": y = net(x)
+		elif mode == "snn": y, spiking_actv = net(x)
+		
 		if loss_f == "mse":
 			label = F.one_hot(label, 10).float()
 			loss = F.mse_loss(y, label)
@@ -27,6 +29,9 @@ def train(net, mode, train_loader, optimizer, device, epoch, loss_f, custom_plas
 			pred = y.argmax(dim=1)
 			correct_pred += (pred == label).sum().item()
 
+		if mode == "snn":
+			loss += sparse_reg * torch.norm(spiking_actv)
+			
 		loss.backward()
 		
 		if custom_plasticity:
@@ -50,7 +55,7 @@ def train(net, mode, train_loader, optimizer, device, epoch, loss_f, custom_plas
 
 
 
-def test(net, mode, test_loader, device, loss_f):
+def test(net, mode, test_loader, device, loss_f, sparse_reg=0):
 	
 	net.eval()
 	test_loss = 0
@@ -61,7 +66,9 @@ def test(net, mode, test_loader, device, loss_f):
 		for x, label in test_loader:
 			
 			x, label = x.to(device), label.to(device)
-			y = net(x)
+			
+			if mode == "ann": y = net(x)
+			elif mode == "snn": y, spiking_actv = net(x)
 
 			if loss_f == "mse":
 				label = F.one_hot(label, 10).float()
